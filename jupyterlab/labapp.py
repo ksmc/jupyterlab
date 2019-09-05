@@ -30,6 +30,7 @@ build_aliases['app-dir'] = 'LabBuildApp.app_dir'
 build_aliases['name'] = 'LabBuildApp.name'
 build_aliases['version'] = 'LabBuildApp.version'
 build_aliases['dev-build'] = 'LabBuildApp.dev_build'
+build_aliases['source-build'] = 'LabBuildApp.source_build'
 build_aliases['debug-log-path'] = 'DebugLogFileMixin.debug_log_path'
 
 build_flags = dict(flags)
@@ -63,12 +64,17 @@ class LabBuildApp(JupyterApp, DebugLogFileMixin):
 
     dev_build = Bool(True, config=True,
         help="Whether to build in dev mode (defaults to dev mode)")
+    
+    source_build = Bool(False, config=True,
+        help="Whether to build from source (defaults to False)")
 
     pre_clean = Bool(False, config=True,
         help="Whether to clean before building (defaults to False)")
 
     def start(self):
+        print("labapp.start")
         command = 'build:prod' if not self.dev_build else 'build'
+        command = command+':source' if self.source_build else command
         app_dir = self.app_dir or get_app_dir()
         self.log.info('JupyterLab %s', version)
         with self.debug_logging():

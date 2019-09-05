@@ -532,7 +532,14 @@ class _AppHandler(object):
                 os.remove(other['path'])
 
         return True
-
+    
+    def modify_module(self, in_path, out_path):
+        try:
+            shutil.copytree(in_path, out_path)
+        except:
+            shutil.rmtree(out_path)
+            shutil.copytree(in_path, out_path)    
+    
     def build(self, name=None, version=None, static_url=None,
               command='build:prod', clean_staging=False):
         """Build the application.
@@ -548,22 +555,44 @@ class _AppHandler(object):
         )
 
         staging = pjoin(app_dir, 'staging')
+        node_modules = pjoin(staging, 'node_modules')
 
         # Make sure packages are installed.
-        ret = self._run(['node', YARN_PATH, 'install', '--non-interactive'], cwd=staging)
-        if ret != 0:
-            msg = 'npm dependencies failed to install'
-            self.logger.debug(msg)
-            raise RuntimeError(msg)
-
-        dedupe_yarn(staging, self.logger)
-
-        # Build the app.
-        ret = self._run(['node', YARN_PATH, 'run', command], cwd=staging)
-        if ret != 0:
-            msg = 'JupyterLab failed to build'
-            self.logger.debug(msg)
-            raise RuntimeError(msg)
+        if command in ['build:prod:source','build:source']:
+            print("build prod from source")
+            command = ':'.join(command.split(':')[:-1])
+            ret = self._run(['node', YARN_PATH, 'install', '--non-interactive','--check-files'], cwd=staging)
+            if ret != 0:
+                msg = 'npm dependencies failed to install'
+                self.logger.debug(msg)
+                raise RuntimeError(msg)
+            dedupe_yarn(staging, self.logger)
+            
+            # Copy modified modules to node_modules
+            self.modify_module(pjoin(HERE, 'staging', 'node_modules','@jupyterlab','coreutils','lib'), pjoin(node_modules, '@jupyterlab','coreutils','lib'))
+            self.modify_module(pjoin(HERE, 'staging', 'node_modules','@jupyterlab','filebrowser','lib'), pjoin(node_modules, '@jupyterlab','filebrowser','lib'))
+        
+            # Build the app.
+            ret = self._run(['node', YARN_PATH, 'run', command], cwd=staging)
+            if ret != 0:
+                msg = 'JupyterLab failed to build'
+                self.logger.debug(msg)
+                raise RuntimeError(msg)
+        else:
+            print("build prod from npm")
+            ret = self._run(['node', YARN_PATH, 'install', '--non-interactive'], cwd=staging)
+            if ret != 0:
+                msg = 'npm dependencies failed to install'
+                self.logger.debug(msg)
+                raise RuntimeError(msg)
+            dedupe_yarn(staging, self.logger)
+    
+            # Build the app.
+            ret = self._run(['node', YARN_PATH, 'run', command], cwd=staging)
+            if ret != 0:
+                msg = 'JupyterLab failed to build'
+                self.logger.debug(msg)
+                raise RuntimeError(msg)
 
     def watch(self):
         """Start the application watcher and then run the watch in
