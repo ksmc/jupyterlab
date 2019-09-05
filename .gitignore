@@ -1,7 +1,7 @@
 MANIFEST
 build
 dist
-lib
+# lib
 
 jupyterlab/imports.css
 jupyterlab/static
@@ -18,7 +18,7 @@ dev_mode/stats.json
 packages/nbconvert-css/style/
 
 packages/theme-*/static
-node_modules
+#node_modules
 .cache
 .vscode
 *.py[co]
