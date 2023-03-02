@@ -5,7 +5,7 @@
     "build": "webpack"
   },
   "devDependencies": {
-    "vega": "^4.4.0",
+    "vega": "^5.23.0",
     "vega-embed": "^4.2.0",
     "vega-lite": "^2.7.0",
     "webpack": "^4.32.2"
